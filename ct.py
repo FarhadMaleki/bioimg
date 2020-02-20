@@ -1,26 +1,27 @@
-""" Module for working with CT Data.
+""" This module provide functionality for working masked or unmasked images.
 
 """
 import SimpleITK as sitk
 from bioimage import BioImage
-from constants import BioImageModality
+from constants import Modality
 
 
 class DICOMCTDIR(object):
-    """ Create a DICOM CT object from a directory for the CT image
-        (and possibly a directory for the image contours).
+    """ Create an object from a directory containing DICOM files.
+
+        For masked images, the address of a second directory containg masks
+            must be provided.
 
     Args:
         sample_id (str): An identifier assigned to each sample,
             i.e. each patient.
         image_id (str): An identifier assigned to each image,
-            i.e. each CT image.
         image_path (str): The address of the directory containing DICOM
-            files for the CT.
+            files.
         mask_path (str): The address of the directory containing DICOM
-            files for the contour.
+            files for the image mask. Default is None for images with no mask.
     """
-    MODALITY = BioImageModality.DICOM_CT_DIR
+    MODALITY = Modality.DICOM_CT_DIR
 
     def __init__(self, sample_id, image_id, image_path, mask_path=None):
         self.sample_id = sample_id
@@ -32,7 +33,7 @@ class DICOMCTDIR(object):
 
     @classmethod
     def get_array(cls, image):
-        """ Get the voxel values for either the CT image or its mask.
+        """ Get the voxel values.
 
         Args:
             image (DICOMCTDIR): The object for which the voxel values
@@ -44,8 +45,7 @@ class DICOMCTDIR(object):
         return sitk.GetArrayViewFromImage(image)
 
     def load(self):
-        """ Loads the data for CT image data (and possibly the contour data
-            for the contours)
+        """ Loads the data for an image and its mask, if applicable.
 
         Returns:
             image vexel values as a numpy array.
@@ -58,35 +58,36 @@ class DICOMCTDIR(object):
             image_shape = (DICOMCTDIR.get_array(image)).shape
             mask_shape = (DICOMCTDIR.get_array(mask)).shape
             if image_shape != mask_shape:
-                ValueError('CT and its Mask must be of the same shape')
+                ValueError('Image and its mask must be of the same shape')
         return image, mask
 
 
-class NRRDCT(object):
-    """ Create a NRRD CT object from a nrrd file for the CT image
-            (and possibly a nrrd file for the image contours).
+class SimpleImage(object):
+    """ Create a SimpleImage object.
 
-        Args:
-            sample_id (str): An identifier assigned to each sample,
-                i.e. each patient.
-            image_id (str): An identifier assigned to each image,
-                i.e. each CT image.
-            image_path (str): The address of the nrrd file for the CT.
-            mask_path (str): The address of the nrrd file for the contour.
+    For unmasked images, a single file is required. For masked images two
+        files, one for the image and another for the mask, are required.
+
+    Args:
+        sample_id (str): An identifier assigned to each sample,
+            i.e. each patient.
+        image_id (str): An identifier assigned to each image.
+        image_path (str): The address of the image file.
+        mask_path (str): The address of the mask file.
         """
-    MODALITY = BioImageModality.NRRD_CT
+    MODALITY = Modality.SIMPLE_IMAGE
 
     def __init__(self, sample_id, image_id, image_path, mask_path=None):
         self.sample_id = sample_id
         self.image_id = image_id
-        self.image = BioImage(image_path, modality=NRRDCT.MODALITY)
+        self.image = BioImage(image_path, modality=SimpleImage.MODALITY)
         self.mask = None
         if mask_path is not None:
-            self.mask = BioImage(mask_path, modality=NRRDCT.MODALITY)
+            self.mask = BioImage(mask_path, modality=SimpleImage.MODALITY)
 
     @classmethod
     def get_array(cls, image):
-        """ Get the voxel values for either the CT image or its mask.
+        """ Get the voxel values.
 
         Args:
             image (DICOMCTDIR): The object for which the voxel values
@@ -98,8 +99,7 @@ class NRRDCT(object):
         return sitk.GetArrayFromImage(image)
 
     def load(self):
-        """ Loads the data for CT image data (and possibly the contour data
-            for the contours)
+        """ Loads voxel values for the image and its mask, if applicable.
 
         Returns:
             image vexel values as a numpy array.
@@ -109,8 +109,8 @@ class NRRDCT(object):
         mask = None
         if self.mask is not None:
             mask = self.mask.load()
-            image_shape = (NRRDCT.get_array(image)).shape
-            mask_shape = (NRRDCT.get_array(mask)).shape
+            image_shape = (SimpleImage.get_array(image)).shape
+            mask_shape = (SimpleImage.get_array(mask)).shape
             if image_shape != mask_shape:
-                ValueError('CT and its Mask must be of the same shape')
+                ValueError('Image and its mask must be of the same shape')
         return image, mask

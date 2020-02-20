@@ -8,15 +8,15 @@ from utils import read_catalog
 from utils import extract_radiomics_features
 from utils import partition
 from ct import DICOMCTDIR
-from ct import NRRDCT
+from ct import SimpleImage
 
 
 class TestHandCraft(unittest.TestCase):
     def setUp(self):
         brain1_image_path = 'test/data/brain1_image.nrrd'
         brain1_label_path = 'test/data/brain1_label.nrrd'
-        brain1_masked_ct = NRRDCT('brain1', 'CT1', brain1_image_path,
-                                  mask_path=brain1_label_path)
+        brain1_masked_ct = SimpleImage('brain1', 'CT1', brain1_image_path,
+                                       mask_path=brain1_label_path)
         self.brain1_image, self.brain1_mask = brain1_masked_ct.load()
         config_path = 'test/data/params.yaml'
         self.hc = HandCraft(config_path=config_path)

@@ -55,7 +55,7 @@ def visualize_slice(image, mask, ax, location, width, **kwargs):
         ax.imshow(mask_image, cmap='autumn', interpolation='none', alpha=0.7)
 
 
-def read_DICOM_CT_from_dir(dir_path):
+def read_DICOM_from_dir(dir_path):
     """ Read a CT image (or its contours) from a directory.
 
     Args:
