@@ -4,8 +4,8 @@
 import os
 import SimpleITK as sitk
 
-from constants import BioImageModality
-from utils import read_DICOM_CT_from_dir
+from constants import Modality
+from utils import read_DICOM_from_dir
 
 
 class BioImage(object):
@@ -16,44 +16,21 @@ class BioImage(object):
         modality: A BioImageModality value 
     """
     def __init__(self, source, modality=None):
-        BioImage.__validate(source, modality)
+        self.source = source
         self.modality = modality
         self.source = source
 
-    @staticmethod
-    def __validate(source, modality):
-        """ Validate the source used for a given modality.
-        Args:
-            source: The source from which a biomedical image should be read.
-            modality: A BioImageModality value. All supported
-                modalities should be validated.
-        Raises:
-            ValueError: If the source or modality is not supported. See the
-                supported modalities.
-        """
-        if modality == BioImageModality.DICOM_CT_DIR:
-            assert os.path.isdir(source)
-        elif modality == BioImageModality.NRRD_CT:
-            assert os.path.isfile(source)
-            assert source.lower().endswith('.nrrd')
-        elif modality == BioImageModality.DICOM_CT_SLICE:
-            assert os.path.isfile(source)
-            assert source.lower().endswith('.dcm')
-        else:
-            raise ValueError('Invalid source or modality. See the supported '
-                             'modalities.')
-
     def load(self):
-        """ Load voxel values for a biomedical image.
+        """ Load voxel values for an image.
 
         Returns:
             A SimpleITK.Image.
 
         """
         modality_to_load_function_map = {
-            BioImageModality.DICOM_CT_DIR: BioImage.load_dicom_ct_from_dir,
-            BioImageModality.NRRD_CT: BioImage.load_nrrd_ct_from_file,
-            BioImageModality.DICOM_CT_SLICE: BioImage.load_dicom_ct_slice_from_file,
+            Modality.DICOM_CT_DIR: BioImage.load_dicom_from_dir,
+            Modality.SIMPLE_IMAGE: BioImage.load_simple_image_from_file,
+            Modality.DICOM_CT_SLICE: BioImage.load_dicom_slice_from_file,
         }
         load_function = modality_to_load_function_map.get(self.modality)
         if load_function:
@@ -62,8 +39,8 @@ class BioImage(object):
         raise ValueError('Undefined modality.')
 
     @classmethod
-    def load_dicom_ct_from_dir(cls, dir_path):
-        """ Load a CT image (or its contours) from a directory.
+    def load_dicom_from_dir(cls, dir_path):
+        """ Load an image (or its contours) from a directory.
         Args:
             dir_path (str): Address of the directory containing the DICOM files.
 
@@ -71,16 +48,19 @@ class BioImage(object):
             A SimpleITK image.
         """
         if not os.path.isdir(dir_path):
-            raise ValueError('path must be a directory address, but it is not'
-                             'Check {}'.format(dir_path))
-        image = read_DICOM_CT_from_dir(dir_path)
+            msg = '{} must be a directory address, but it is not.'
+            raise ValueError(msg.format(dir_path))
+        image = read_DICOM_from_dir(dir_path)
         return image
 
     @classmethod
-    def load_nrrd_ct_from_file(cls, file_path):
-        """ Load a CT image (or its contours) from an NRRD file.
+    def load_simple_image_from_file(cls, file_path):
+        """ Load an image (or its contours) from a file.
+
+        File types that can be read by SimpleITK.ReadImage are supported.
+
         Args:
-            file_path (str): Address of an NRRD file.
+            file_path (str): Address of the image file.
 
         Returns:
             A SimpleITK image.
@@ -89,7 +69,7 @@ class BioImage(object):
         return image
 
     @classmethod
-    def load_dicom_ct_slice_from_file(cls, file_path):
+    def load_dicom_slice_from_file(cls, file_path):
         """ Load a slice of a CT image (or its contours) from a DICOM file.
         Args:
             file_path (str): Address of an DICOM file.
