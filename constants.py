@@ -1,8 +1,9 @@
 class Modality(object):
     """
     DICOM_CT_DIR: Used for DICOM files within a directory.
-    NRRD_CT: Used for an NRRD file. File extensions must be
-        '.nrrd' or '.NRRD'.
+    SIMPLE_IMAGE: Used for a single file supported by SimpleITK.
+        See the supported files at the following link:
+        https://simpleitk.readthedocs.io/en/master/IO.html
     DICOM_CT_SLICE: Used for a single slice from a DICOM
         file. File extension must be '.dcm' or '.DCM'.
     """
