@@ -18,7 +18,6 @@ class BioImage(object):
     def __init__(self, source, modality=None):
         self.source = source
         self.modality = modality
-        self.source = source
 
     def load(self):
         """ Load voxel values for an image.
